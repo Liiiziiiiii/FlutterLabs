@@ -1,51 +1,21 @@
-//import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lab1/model/user.dart';
-import 'package:lab1/repositories/date_repository.dart';
-import 'package:lab1/repositories/hive_network_repository.dart';
-import 'package:lab1/repositories/network_repository.dart';
-import 'package:lab1/utils/user_preferences.dart';
-//import 'package:lab1/widget/appbar_widget.dart';
+import 'package:lab1/providers/ideas_notifier.dart';
+import 'package:lab1/providers/user_notifier.dart';
+//import 'package:lab1/utils/user_preferences.dart';
 import 'package:lab1/widget/home.dart';
 import 'package:lab1/widget/profile_widget.dart';
+import 'package:provider/provider.dart';
 
-class ProfilePage extends StatefulWidget {
-  final IdeaRepository ideasRepository;
-  const ProfilePage({required this.ideasRepository, super.key});
-
-  @override
-  ProfilePageState createState() => ProfilePageState();
-}
-
-class ProfilePageState extends State<ProfilePage> {
-  List<String> _savedIdeas = [];
-  final NetworkService networkService = HiveNetworkService();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadIdeas();
-  }
-
-  Future<void> _loadIdeas() async {
-    final ideas = await widget.ideasRepository.loadIdeas();
-    setState(() {
-      _savedIdeas = ideas;
-    });
-  }
-
-  Future<void> _removeIdea(String idea) async {
-    await widget.ideasRepository.removeIdea(idea);
-    await _loadIdeas();
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Ідея видалена')));
-  }
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = UserPreferences.myUser;
+    // final user = UserPreferences.myUser;
+    // final ideasNotifier = context.watch<IdeasNotifier>();
+    final user = context.watch<UserNotifier>().user;
+    final ideasNotifier = context.watch<IdeasNotifier>();
 
     return Scaffold(
       appBar: AppBar(
@@ -59,33 +29,28 @@ class ProfilePageState extends State<ProfilePage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute<MyHomePage>(
-                builder: (context) => MyHomePage(
-                  title: 'Головна',
-                  ideasRepository: widget.ideasRepository,
-                  networkService: networkService,
-                ),
+                builder: (_) => const MyHomePage(title: 'Головна'),
               ),
             );
           },
         ),
       ),
-
       body: ListView(
         physics: const BouncingScrollPhysics(),
         children: [
           ProfileWidget(imagePath: user.photo, onClicked: () async {}),
           const SizedBox(height: 24),
-          buildName(user),
+          _buildName(user),
           const SizedBox(height: 24),
-          if (_savedIdeas.isEmpty)
+          if (ideasNotifier.savedIdeas.isEmpty)
             const Center(child: Text('Немає збережених ідей')),
-          if (_savedIdeas.isNotEmpty)
+          if (ideasNotifier.savedIdeas.isNotEmpty)
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _savedIdeas.length,
+              itemCount: ideasNotifier.savedIdeas.length,
               itemBuilder: (context, index) {
-                final imagePath = _savedIdeas[index];
+                final imagePath = ideasNotifier.savedIdeas[index];
                 return Card(
                   margin: const EdgeInsets.all(8),
                   child: ListTile(
@@ -97,7 +62,14 @@ class ProfilePageState extends State<ProfilePage> {
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _removeIdea(imagePath),
+                      onPressed: () async {
+                        await ideasNotifier.removeIdea(imagePath);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Ідея видалена')),
+                          );
+                        }
+                      },
                     ),
                   ),
                 );
@@ -108,7 +80,7 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget buildName(User user) => Column(
+  Widget _buildName(User user) => Column(
     children: [
       Text(
         user.username,

@@ -1,19 +1,14 @@
+// widget/signup.dart
 import 'package:flutter/material.dart';
 import 'package:lab1/model/user.dart';
-import 'package:lab1/repositories/hive_network_repository.dart';
-import 'package:lab1/repositories/hive_registration_repository.dart';
+import 'package:lab1/providers/signup_provider.dart';
+//import 'package:lab1/Providers/auth_provider.dart';
 import 'package:lab1/utils/validators.dart';
-import 'package:lab1/widget/login.dart';
+import 'package:provider/provider.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+class SignupPage extends StatelessWidget {
+  SignupPage({super.key});
 
-  @override
-  SignupPageState createState() => SignupPageState();
-}
-
-class SignupPageState extends State<SignupPage> {
-  final _repo = HiveAuthRepository();
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -21,31 +16,7 @@ class SignupPageState extends State<SignupPage> {
   final _confirmCtrl = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> _submit(User user) async {
-    final ok = await _repo.register(user);
-    final networkService = HiveNetworkService();
-
-    if (!mounted) return;
-    if (ok) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<LoginPage>(
-          builder: (_) => LoginPage(networkService: networkService),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Акаутна за цією адресоб все існує!')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Зареєструватися')),
       body: Padding(
@@ -85,7 +56,7 @@ class SignupPageState extends State<SignupPage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final user = User(
                       username: _usernameCtrl.text.trim(),
@@ -93,7 +64,20 @@ class SignupPageState extends State<SignupPage> {
                       password: _passwordCtrl.text,
                       photo: '',
                     );
-                    _submit(user);
+
+                    final success = await context
+                        .read<SignupProvider>()
+                        .register(user);
+
+                    if (!context.mounted) return;
+
+                    if (success) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Акаунт вже існує')),
+                      );
+                    }
                   }
                 },
                 child: const Text('Зареєструватися'),

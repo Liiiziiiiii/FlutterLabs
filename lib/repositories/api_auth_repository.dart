@@ -1,5 +1,4 @@
 import 'dart:convert';
-// HTTP-based implementation using `http` package
 import 'package:http/http.dart' as http;
 import 'package:lab1/model/user.dart';
 import 'package:lab1/repositories/registration_repository.dart';
@@ -75,52 +74,3 @@ class ApiAuthRepository implements AuthRepository {
   @override
   String? getToken() => _token;
 }
-
-// Пример unit-тесту з моками (Mockito)
-// test/api_auth_repository_test.dart
-
-/*
-import 'package:flutter_test/flutter_test.dart';
-import 'package:lab1/model/user.dart';
-import 'package:lab1/repositories/api_auth_repository.dart';
-import 'package:http/http.dart' as http;
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
-
-// Генеруємо мок для http.Client
-@GenerateMocks([http.Client])
-void main() {
-  late ApiAuthRepository repo;
-  late MockClient mockClient;
-
-  setUp(() {
-    mockClient = MockClient();
-    repo = ApiAuthRepository(client: mockClient);
-  });
-
-  test('успішна реєстрація повертає true', () async {
-    when(mockClient.post(
-      Uri.parse('http://localhost:5000/register'),
-      headers: anyNamed('headers'),
-      body: anyNamed('body'),
-    )).thenAnswer((_) async => http.Response('', 201));
-
-    final result = await repo.register(
-    User(username: 'u', email: 'e', password: 'p', photo: ''));
-    expect(result, isTrue);
-  });
-
-  test('успішний логін повертає User', () async {
-    final json = '{"username":"test","token":"abc"}';
-    when(mockClient.post(
-      Uri.parse('http://localhost:5000/login'),
-      headers: anyNamed('headers'),
-      body: anyNamed('body'),
-    )).thenAnswer((_) async => http.Response(json, 200));
-
-    final user = await repo.login('e', 'p');
-    expect(user, isNotNull);
-    expect(repo.getToken(), 'abc');
-  });
-}
-*/

@@ -6,6 +6,7 @@ import 'package:lab1/repositories/registration_repository.dart';
 class HiveAuthRepository implements AuthRepository {
   //static const _boxName = 'users';
   //late Box<User> _box;
+  String? _token;
   final _box = Hive.box<User>('users');
 
   @override
@@ -35,4 +36,7 @@ class HiveAuthRepository implements AuthRepository {
 
   @override
   Future<void> deleteUser() async => _box.clear();
+
+  @override
+  String? getToken() => _token;
 }

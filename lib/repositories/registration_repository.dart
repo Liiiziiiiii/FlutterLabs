@@ -8,4 +8,5 @@ abstract class AuthRepository {
   Future<User?> getCurrentUser();
   Future<void> updateUser(User user);
   Future<void> deleteUser();
+  String? getToken();
 }
