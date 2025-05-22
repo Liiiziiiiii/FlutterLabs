@@ -1,15 +1,19 @@
-class User {
-  final String imagePath;
-  final String name;
-  final String email;
-  final String about;
-  final bool isDarkMode;
+// lib/models/user.dart
+import 'package:hive/hive.dart';
 
-  const User({
-    required this.imagePath,
-    required this.name,
-    required this.email,
-    required this.about,
-    required this.isDarkMode,
-  });
+part 'user.g.dart';
+
+@HiveType(typeId: 0)
+class User extends HiveObject {
+  @HiveField(0)
+  String username;
+  @HiveField(1)
+  String email;
+  @HiveField(2)
+  String password;
+  @HiveField(3)
+  String photo;
+
+  User({required this.username, required this.email, required this.password, 
+  required this.photo});
 }

@@ -1,42 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lab1/model/user.dart';
+import 'package:lab1/repositories/date_repository.dart';
+import 'package:lab1/repositories/hive_date_repository.dart';
+//import 'package:lab1/repositories/hive_date_repository.dart';
+import 'package:lab1/repositories/hive_registration_repository.dart';
+import 'package:lab1/utils/user_preferences.dart';
+import 'package:lab1/widget/home.dart';
 import 'package:lab1/widget/registration.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  LoginPageState createState() => LoginPageState();
+}
+
+class LoginPageState extends State<LoginPage> {
+  final _repo = HiveAuthRepository();
+final IdeaRepository ideasRepository = HiveIdeaRepository();
+
+  final _formKey = GlobalKey<FormState>();
+  String _email = '';
+  String _password = '';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    //_repo.init();
+  }
+
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    _formKey.currentState!.save();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final User? user = await _repo.login(_email, _password);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (!mounted) return;
+
+    if (user != null) {
+      UserPreferences.myUser = user;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<MyHomePage>(
+          builder: (_) => MyHomePage(
+            title: 'Ідеї для побачень',
+            ideasRepository: ideasRepository,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid username or password')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         margin: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [_header(context), _inputField(context), _signup(context)],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [_header(), _inputField(), _signup(context)],
+          ),
         ),
       ),
     );
   }
 
-  // Тепер вказуємо, що метод повертає Widget
-  Widget _header(BuildContext context) {
+  Widget _header() {
     return const Column(
       children: [
         Text(
           'Welcome Back',
           style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
         ),
-        Text('Enter your credential to login'),
+        Text('Enter your credentials to login'),
       ],
     );
   }
 
-  Widget _inputField(BuildContext context) {
+  Widget _inputField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        TextFormField(
           decoration: InputDecoration(
-            hintText: 'Username',
+            hintText: 'Email',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
@@ -45,9 +109,11 @@ class LoginPage extends StatelessWidget {
             filled: true,
             prefixIcon: const Icon(Icons.person),
           ),
+          validator: (v) => v == null || v.isEmpty ? 'Enter email' : null,
+          onSaved: (v) => _email = v!.trim(),
         ),
         const SizedBox(height: 10),
-        TextField(
+        TextFormField(
           decoration: InputDecoration(
             hintText: 'Password',
             border: OutlineInputBorder(
@@ -59,16 +125,31 @@ class LoginPage extends StatelessWidget {
             prefixIcon: const Icon(Icons.password),
           ),
           obscureText: true,
+          validator: (v) => v == null || v.length < 6 ? 'Min 6 chars' : null,
+          onSaved: (v) => _password = v!,
         ),
         const SizedBox(height: 10),
         ElevatedButton(
-          onPressed: () {},
+          onPressed: _isLoading ? null : _login,
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 16),
             backgroundColor: Colors.purple,
           ),
-          child: const Text('Login', style: TextStyle(fontSize: 20)),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Login', style: TextStyle(fontSize: 20)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<AllUsersPage>(
+                builder: (_) => const AllUsersPage(),
+              ),
+            );
+          },
+          child: const Text('Show All Users'),
         ),
       ],
     );
@@ -93,15 +174,32 @@ class LoginPage extends StatelessWidget {
       ],
     );
   }
+}
 
-  // Якщо розкоментуєш, також вкажи Widget тут:
-  // Widget _forgotPassword(BuildContext context) {
-  //   return TextButton(
-  //     onPressed: () {},
-  //     child: const Text(
-  //       "Forgot password?",
-  //       style: TextStyle(color: Colors.purple),
-  //     ),
-  //   );
-  // }
+class AllUsersPage extends StatelessWidget {
+  const AllUsersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final box = Hive.box<User>('users');
+    final users = box.values.toList();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('All Users')),
+      body: ListView.builder(
+        itemCount: users.length,
+        itemBuilder: (context, index) {
+          final user = users[index];
+          return ListTile(
+            leading: const Icon(Icons.person),
+            title: Text(user.username),
+            subtitle: Text(
+              'Username: ${user.username}, Email: ${user.email},'
+              'Password:${user.password}, Photo: ${user.photo}',
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

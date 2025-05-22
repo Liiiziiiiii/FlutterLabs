@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lab1/model/date.dart';
+import 'package:lab1/model/user.dart';
+import 'package:lab1/widget/login.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(UserAdapter());
+  Hive.registerAdapter(DateAdapter());
+
+  await Hive.openBox<User>('users');
+  await Hive.openBox<Date>('ideas');
+
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -15,56 +30,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF854F6C)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Ідеї для побачень'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({required this.title, super.key});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final List<String> _images = [
-    'assets/images/foto1.jpg',
-    'assets/images/foto2.jpg',
-    'assets/images/foto3.jpg',
-    'assets/images/foto4.jpg',
-  ];
-
-  int _currentIndex = 0;
-
-  void _nextImage() {
-    setState(() {
-      _currentIndex = (_currentIndex + 1) % _images.length;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: const Color(0xFFDFB6B2),
-      ),
-      body: Center(
-        child: Image.asset(
-          _images[_currentIndex],
-          fit: BoxFit.cover,
-          width: 300,
-          height: 300,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _nextImage,
-        tooltip: 'Далі',
-        child: const Icon(Icons.arrow_forward),
-      ),
+      home: const LoginPage(),
     );
   }
 }

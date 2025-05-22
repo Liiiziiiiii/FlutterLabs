@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lab1/repositories/date_repository.dart';
 import 'package:lab1/widget/profile.dart';
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({required this.title, super.key});
+  final IdeaRepository ideasRepository;
+  const MyHomePage({
+    required this.title,
+    required this.ideasRepository,
+    super.key,
+  });
 
   final String title;
 
@@ -19,11 +25,42 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   int _currentIndex = 0;
+  List<String> _savedIdeas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIdeas();
+  }
+
+  Future<void> _loadIdeas() async {
+    final ideas = await widget.ideasRepository.loadIdeas();
+    setState(() {
+      _savedIdeas = ideas;
+    });
+  }
 
   void _nextImage() {
     setState(() {
       _currentIndex = (_currentIndex + 1) % _images.length;
     });
+  }
+
+  Future<void> _saveIdea() async {
+    final currentImage = _images[_currentIndex];
+    if (!_savedIdeas.contains(currentImage)) {
+      await widget.ideasRepository.addIdea(currentImage);
+      await _loadIdeas();
+      if (!mounted) return; 
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ідея додана до профілю')));
+    } else {
+      if (!mounted) return; 
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ідея вже збережена')));
+    }
   }
 
   @override
@@ -40,20 +77,33 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push<void>(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (context) => const ProfilePage(),
+                  builder: (context) =>
+                      ProfilePage(ideasRepository: widget.ideasRepository),
                 ),
-              );
+              ).then((_) => _loadIdeas());
             },
           ),
         ],
       ),
-      body: Center(
-        child: Image.asset(
-          _images[_currentIndex],
-          fit: BoxFit.cover,
-          width: 300,
-          height: 300,
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(
+            child: Image.asset(
+              _images[_currentIndex],
+              fit: BoxFit.cover,
+              width: 300,
+              height: 300,
+            ),
+          ),
+          const SizedBox(height: 8),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Додати ідею',
+            iconSize: 40,
+            onPressed: _saveIdea,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _nextImage,
