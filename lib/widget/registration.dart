@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lab1/model/user.dart';
+import 'package:lab1/repositories/hive_network_repository.dart';
 import 'package:lab1/repositories/hive_registration_repository.dart';
 import 'package:lab1/utils/validators.dart';
-//import 'package:lab1/widget/home.dart';
 import 'package:lab1/widget/login.dart';
 
 class SignupPage extends StatefulWidget {
@@ -20,31 +20,26 @@ class SignupPageState extends State<SignupPage> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
-@override
-void initState() {
-  super.initState();
-  // помічник для виклику async-коду в initState
-  // Future.microtask(() async {
-  //   await _repo.init();
-  //   setState(() { });
-  // });
-}
-
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Future<void> _submit(User user) async {
     final ok = await _repo.register(user);
+    final networkService = HiveNetworkService();
 
     if (!mounted) return;
     if (ok) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<LoginPage>(
-          builder: (_) => const LoginPage(),
+          builder: (_) => LoginPage(networkService: networkService),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email already exists')),
+        const SnackBar(content: Text('Акаутна за цією адресоб все існує!')),
       );
     }
   }
@@ -52,7 +47,7 @@ void initState() {
   @override
   Widget build(BuildContext c) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: AppBar(title: const Text('Зареєструватися')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -61,32 +56,32 @@ void initState() {
             children: [
               TextFormField(
                 controller: _usernameCtrl,
-                decoration: const InputDecoration(hintText: 'Username'),
+                decoration: const InputDecoration(hintText: 'Ім\'я'),
                 validator: (v) =>
-                    isValidUsername(v!.trim()) ? null : 'Only letters',
+                    isValidUsername(v!.trim()) ? null : 'Тільки букви',
               ),
               const SizedBox(height: 16),
-              // Поле для вводу email
               TextFormField(
                 controller: _emailCtrl,
-                decoration: const InputDecoration(hintText: 'Email'),
-                validator: (v) => 
-                isValidEmail(v!.trim()) ? null : 'Invalid email',
+                decoration: const InputDecoration(hintText: 'Пошта'),
+                validator: (v) =>
+                    isValidEmail(v!.trim()) ? null : 'Некоректна пошта',
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordCtrl,
-                decoration: const InputDecoration(hintText: 'Password'),
+                decoration: const InputDecoration(hintText: 'Пароль'),
                 obscureText: true,
-                validator: (v) => isValidPassword(v!) ? null : 'Min 6 chars',
+                validator: (v) =>
+                    isValidPassword(v!) ? null : 'Менше за 6 символів',
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmCtrl,
-                decoration: const InputDecoration(hintText: 'Confirm'),
+                decoration: const InputDecoration(hintText: 'Підтвердити'),
                 obscureText: true,
                 validator: (v) =>
-                    v == _passwordCtrl.text ? null : 'Passwords differ',
+                    v == _passwordCtrl.text ? null : 'Паролі не співпадають',
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -101,7 +96,7 @@ void initState() {
                     _submit(user);
                   }
                 },
-                child: const Text('Sign Up'),
+                child: const Text('Зареєструватися'),
               ),
             ],
           ),

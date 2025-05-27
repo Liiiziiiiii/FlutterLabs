@@ -2,8 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:lab1/model/user.dart';
 import 'package:lab1/repositories/date_repository.dart';
+import 'package:lab1/repositories/hive_network_repository.dart';
+import 'package:lab1/repositories/network_repository.dart';
 import 'package:lab1/utils/user_preferences.dart';
-import 'package:lab1/widget/appbar_widget.dart';
+//import 'package:lab1/widget/appbar_widget.dart';
+import 'package:lab1/widget/home.dart';
 import 'package:lab1/widget/profile_widget.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -16,6 +19,7 @@ class ProfilePage extends StatefulWidget {
 
 class ProfilePageState extends State<ProfilePage> {
   List<String> _savedIdeas = [];
+  final NetworkService networkService = HiveNetworkService();
 
   @override
   void initState() {
@@ -44,7 +48,28 @@ class ProfilePageState extends State<ProfilePage> {
     final user = UserPreferences.myUser;
 
     return Scaffold(
-      appBar: buildAppBar(context),
+      appBar: AppBar(
+        title: const Text('Профіль'),
+        backgroundColor: const Color(0xFFDFB6B2),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          tooltip: 'Повернутися на головну',
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute<MyHomePage>(
+                builder: (context) => MyHomePage(
+                  title: 'Головна',
+                  ideasRepository: widget.ideasRepository,
+                  networkService: networkService,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+
       body: ListView(
         physics: const BouncingScrollPhysics(),
         children: [

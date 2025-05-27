@@ -7,8 +7,6 @@ class HiveIdeaRepository implements IdeaRepository {
 
   @override
   Future<List<String>> loadIdeas() async {
-    // Імітація затримки завантаження
-    //await Future.delayed(const Duration(milliseconds: 100));
     return List.from(_ideas);
   }
 

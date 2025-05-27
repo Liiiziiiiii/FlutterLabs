@@ -1,13 +1,31 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-AppBar buildAppBar(BuildContext context) {
-  const icon = CupertinoIcons.moon_stars;
-
+AppBar buildAppBar({
+  required BuildContext context,
+  required VoidCallback onLogoutPressed,
+  required VoidCallback onSensorPressed,
+  required VoidCallback onProfilePressed,
+}) {
   return AppBar(
-    leading: const BackButton(),
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    actions: [IconButton(icon: const Icon(icon), onPressed: () {})],
+    // title: const Text('Головна'),
+    // backgroundColor: const Color(0xFFDFB6B2),
+    // elevation: 0,
+    actions: [
+      IconButton(
+        icon: const Icon(Icons.sensors),
+        tooltip: 'Сенсори',
+        onPressed: onSensorPressed,
+      ),
+      IconButton(
+        icon: const Icon(Icons.logout),
+        tooltip: 'Вийти',
+        onPressed: onLogoutPressed,
+      ),
+      IconButton(
+        icon: const Icon(Icons.person),
+        tooltip: 'Профіль',
+        onPressed: onProfilePressed,
+      ),
+    ],
   );
 }

@@ -3,22 +3,27 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lab1/model/user.dart';
 import 'package:lab1/repositories/date_repository.dart';
 import 'package:lab1/repositories/hive_date_repository.dart';
+import 'package:lab1/repositories/hive_network_repository.dart';
 //import 'package:lab1/repositories/hive_date_repository.dart';
 import 'package:lab1/repositories/hive_registration_repository.dart';
+import 'package:lab1/repositories/network_repository.dart';
 import 'package:lab1/utils/user_preferences.dart';
 import 'package:lab1/widget/home.dart';
 import 'package:lab1/widget/registration.dart';
+//import 'package:lab1/repositories/hive_network_repository.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final NetworkService networkService;
+  const LoginPage({required this.networkService, super.key});
 
   @override
   LoginPageState createState() => LoginPageState();
-}
+} 
 
 class LoginPageState extends State<LoginPage> {
   final _repo = HiveAuthRepository();
-final IdeaRepository ideasRepository = HiveIdeaRepository();
+  final IdeaRepository ideasRepository = HiveIdeaRepository();
+  final NetworkService networkService = HiveNetworkService();
 
   final _formKey = GlobalKey<FormState>();
   String _email = '';
@@ -33,7 +38,16 @@ final IdeaRepository ideasRepository = HiveIdeaRepository();
 
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
-
+    //перевірка на з'єднання до інтернету
+    final connected = await widget.networkService.isConnected();
+    if (!connected) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Немає з’єднання з Інтернетом')),
+        );
+      }
+      return;
+    }
     _formKey.currentState!.save();
 
     setState(() {
@@ -56,6 +70,7 @@ final IdeaRepository ideasRepository = HiveIdeaRepository();
           builder: (_) => MyHomePage(
             title: 'Ідеї для побачень',
             ideasRepository: ideasRepository,
+            networkService: networkService
           ),
         ),
       );
